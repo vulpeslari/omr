@@ -1,0 +1,2 @@
+total_images,total_annotations,valid_annotations,num_classes,avg_annotations_per_image,median_annotations_per_image,p95_annotations_per_image,avg_image_width,avg_image_height
+255385,120138069,120065126,142,470.1338214852086,409.0,1063.0,2033.153897057384,2875.437954460912

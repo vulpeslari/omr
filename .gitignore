@@ -1,0 +1,18 @@
+# datasets
+exports/
+dataset/
+
+# python
+__pycache__/
+*.pyc
+
+# venv
+.venv
+
+# misc
+*.log
+*.json
+
+#models
+yolo26n.pt
+yolov8s.pt

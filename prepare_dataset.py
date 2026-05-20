@@ -10,37 +10,35 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
+from class_data import (
+    CLASS_MAP,
+    CLASS_EXCLUDE_MAP,
+)
+
 # =========================================================
 # CONFIG
 # =========================================================
 
-DATASET_ROOT = Path("/mnt/dataset/ds2_complete")
+DATASET_ROOT = Path(
+    "/home/vulpeslari/omr/dataset/aria/ds2_complete"
+)
 
 OUTPUT_ROOT = Path(
-    "/home/ubuntu/yolo_omr2/exports/ds2_compact_curated_v2"
+    "/home/vulpeslari/omr/exports/ds2_compact_curated"
 )
 
 SEED = 42
 
-TARGET_IMAGES = 150000
+TARGET_IMAGES = 200000
 TRAIN_RATIO = 0.90
 
 USE_SYMLINKS = True
-
-# excluir SOMENTE stem
-EXCLUDED_CLASSES = {
-    "stem"
-}
-
-# mínimo de ANOTAÇÕES por classe
-MIN_ANNOTATIONS_PER_CLASS = 300
 
 # =========================================================
 # HELPERS
 # =========================================================
 
 def ensure_dirs():
-
     for p in [
         OUTPUT_ROOT / "images" / "train",
         OUTPUT_ROOT / "images" / "val",
@@ -51,7 +49,6 @@ def ensure_dirs():
 
 
 def category_name(cat):
-
     for key in (
         "name",
         "label",
@@ -64,7 +61,6 @@ def category_name(cat):
 
 
 def find_taxonomy_field(cat):
-
     for key in (
         "annotation_set",
         "annotation_set_name",
@@ -79,15 +75,16 @@ def find_taxonomy_field(cat):
     return None
 
 
-def pick_deepscores_category(cat_ids, categories):
-
+def pick_deepscores_category(
+    cat_ids,
+    categories
+):
     if isinstance(cat_ids, str):
         cat_ids = [cat_ids]
 
     resolved = []
 
     for cid in cat_ids:
-
         cat = categories.get(str(cid))
 
         if not cat:
@@ -104,9 +101,7 @@ def pick_deepscores_category(cat_ids, categories):
         return None
 
     for cid, name, tax, cat in resolved:
-
         if isinstance(tax, str):
-
             if "deepscore" in tax.lower():
                 return cid, name, cat
 
@@ -115,12 +110,18 @@ def pick_deepscores_category(cat_ids, categories):
     return cid, name, cat
 
 
+def normalize_class_name(cls_name):
+    if cls_name in CLASS_MAP:
+        cls_name = CLASS_MAP[cls_name]
+
+    return cls_name
+
+
 def normalize_bbox_xyxy(
     bbox,
     width,
     height
 ):
-
     if not bbox:
         return None
 
@@ -154,7 +155,6 @@ def normalize_bbox_xyxy(
 
 
 def link_or_copy(src, dst):
-
     if dst.exists() or dst.is_symlink():
         dst.unlink()
 
@@ -169,15 +169,17 @@ def link_or_copy(src, dst):
 # =========================================================
 
 def build_image_index():
-
     print("[INFO] indexing images...")
 
     index = {}
 
-    for ext in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
-
+    for ext in (
+        "*.png",
+        "*.jpg",
+        "*.jpeg",
+        "*.webp"
+    ):
         for p in DATASET_ROOT.rglob(ext):
-
             if p.name not in index:
                 index[p.name] = p
 
@@ -190,9 +192,8 @@ def build_image_index():
 # =========================================================
 
 def load_records():
-
     shard_paths = sorted(
-        DATASET_ROOT.rglob("*.json")
+        DATASET_ROOT.glob("*.json")
     )
 
     image_index = build_image_index()
@@ -205,7 +206,6 @@ def load_records():
     class_names = set()
 
     for shard_path in shard_paths:
-
         print(f"[INFO] scanning {shard_path.name}")
 
         with open(shard_path, "r") as f:
@@ -216,7 +216,6 @@ def load_records():
         annotations = data["annotations"]
 
         for img in images:
-
             filename = (
                 img.get("filename")
                 or img.get("file_name")
@@ -238,7 +237,6 @@ def load_records():
             image_classes = set()
 
             for ann_id in img.get("ann_ids", []):
-
                 ann = annotations.get(str(ann_id))
 
                 if ann is None:
@@ -257,7 +255,19 @@ def load_records():
                 if not cls_name:
                     continue
 
-                if cls_name in EXCLUDED_CLASSES:
+                # =========================================
+                # CLASS MAP
+                # =========================================
+
+                cls_name = normalize_class_name(
+                    cls_name
+                )
+
+                # =========================================
+                # EXCLUDE
+                # =========================================
+
+                if cls_name in CLASS_EXCLUDE_MAP:
                     continue
 
                 bbox = normalize_bbox_xyxy(
@@ -269,14 +279,10 @@ def load_records():
                 if bbox is None:
                     continue
 
-                labels.append(
-                    (cls_name, bbox)
-                )
+                labels.append((cls_name, bbox))
 
                 image_classes.add(cls_name)
-
                 annotation_freq[cls_name] += 1
-
                 class_names.add(cls_name)
 
             if not labels:
@@ -302,22 +308,20 @@ def load_records():
 # SCORE
 # =========================================================
 
-def compute_scores(records, annotation_freq):
-
+def compute_scores(
+    records,
+    annotation_freq
+):
     for r in records:
-
         score = 0.0
-
         class_counter = Counter()
 
         for cls, _ in r["labels"]:
             class_counter[cls] += 1
 
         for cls, count in class_counter.items():
-
             freq = annotation_freq[cls]
 
-            # score baseado em ANOTAÇÕES
             score += (
                 count / math.sqrt(freq)
             )
@@ -329,76 +333,20 @@ def compute_scores(records, annotation_freq):
 # =========================================================
 
 def curate(records):
-
     records = sorted(
         records,
         key=lambda x: x["score"],
         reverse=True
     )
 
-    selected = []
-
-    selected_set = set()
-
-    annotation_counter = Counter()
-
-    # =====================================================
-    # PASS 1 - garantir mínimo de ANOTAÇÕES
-    # =====================================================
-
-    for r in records:
-
-        needed = False
-
-        local_counter = Counter()
-
-        for cls, _ in r["labels"]:
-            local_counter[cls] += 1
-
-        for cls, count in local_counter.items():
-
-            if (
-                annotation_counter[cls]
-                < MIN_ANNOTATIONS_PER_CLASS
-            ):
-                needed = True
-                break
-
-        if needed:
-
-            selected.append(r)
-
-            selected_set.add(r["image_path"])
-
-            for cls, _ in r["labels"]:
-                annotation_counter[cls] += 1
-
-    # =====================================================
-    # PASS 2 - completar até alvo
-    # =====================================================
-
-    for r in records:
-
-        if len(selected) >= TARGET_IMAGES:
-            break
-
-        if r["image_path"] in selected_set:
-            continue
-
-        selected.append(r)
-
-        selected_set.add(r["image_path"])
-
-    return selected
+    return records[:TARGET_IMAGES]
 
 # =========================================================
 # SPLIT
 # =========================================================
 
 def split_dataset(records):
-
     random.seed(SEED)
-
     random.shuffle(records)
 
     split_idx = int(
@@ -419,7 +367,6 @@ def pack_dataset(
     val_records,
     class_names
 ):
-
     class_to_id = {
         c: i
         for i, c in enumerate(class_names)
@@ -431,11 +378,9 @@ def pack_dataset(
         ("train", train_records),
         ("val", val_records),
     ]:
-
         print(f"[INFO] packing {split_name}")
 
         for i, rec in enumerate(split_records):
-
             img_src = Path(
                 rec["image_path"]
             ).resolve()
@@ -469,17 +414,12 @@ def pack_dataset(
                 )
             )
 
-            link_or_copy(
-                img_src,
-                img_dst
-            )
+            link_or_copy(img_src, img_dst)
 
             lines = []
 
             for cls_name, bbox in rec["labels"]:
-
                 cls_id = class_to_id[cls_name]
-
                 xc, yc, w, h = bbox
 
                 lines.append(
@@ -491,7 +431,10 @@ def pack_dataset(
                 )
 
             with open(lbl_dst, "w") as f:
-                f.write("\n".join(lines) + "\n")
+
+                f.write(
+                    "\n".join(lines) + "\n"
+                )
 
     dataset_yaml = {
         "path": str(OUTPUT_ROOT),
@@ -519,19 +462,18 @@ def pack_dataset(
 # REPORT
 # =========================================================
 
-def print_stats(records, class_names):
-
+def print_stats(
+    records,
+    class_names
+):
     ann_counter = Counter()
     img_counter = Counter()
 
     for r in records:
-
         seen = set()
 
         for cls, _ in r["labels"]:
-
             ann_counter[cls] += 1
-
             seen.add(cls)
 
         for cls in seen:
@@ -540,7 +482,6 @@ def print_stats(records, class_names):
     rows = []
 
     for cls in class_names:
-
         rows.append({
             "class": cls,
             "annotations": ann_counter[cls],
@@ -554,50 +495,39 @@ def print_stats(records, class_names):
         ascending=False
     )
 
+    stats_csv = (OUTPUT_ROOT / "class_stats.csv")
+    df.to_csv(stats_csv, index=False)
+
     print("\n========== CLASS STATS ==========\n")
-
+    
     print(df.to_string(index=False))
-
+    
     print("\n=================================\n")
-
-# =========================================================
-# MAIN
-# =========================================================
+    
+    print(f"[OK] saved stats -> {stats_csv}")
 
 def main():
-
     ensure_dirs()
 
-    (
-        records,
-        annotation_freq,
-        image_freq,
-        class_names
-    ) = load_records()
+    (records, annotation_freq, image_freq, class_names) = load_records()
 
-    print(f"\n[INFO] total records = {len(records)}")
-
-    compute_scores(
-        records,
-        annotation_freq
+    print(
+        f"\n[INFO] total records = "
+        f"{len(records)}"
     )
+
+    print(
+        f"[INFO] total classes = "
+        f"{len(class_names)}"
+    )
+
+    compute_scores(records, annotation_freq)
 
     curated = curate(records)
+    train_records, val_records = split_dataset(curated)
 
-    train_records, val_records = split_dataset(
-        curated
-    )
-
-    pack_dataset(
-        train_records,
-        val_records,
-        class_names
-    )
-
-    print_stats(
-        curated,
-        class_names
-    )
+    pack_dataset(train_records, val_records, class_names)
+    print_stats(curated, class_names)
 
     print("\n========== DONE ==========\n")
 

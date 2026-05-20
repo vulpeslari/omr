@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from ultralytics import YOLO
+import pandas as pd
 
 # =========================================================
 # CONFIG
@@ -9,15 +10,14 @@ from ultralytics import YOLO
 MODEL = "yolov8s.pt"
 
 DATASET_YAML = (
-    "/mnt/recovery/home/ubuntu/yolo_omr2/"
-    "exports/ds2_compact_curated/dataset.yaml"
+    "/home/vulpeslari/omr/exports/ds2_compact_curated/dataset.yaml"
 )
 
 PROJECT_DIR = (
-    "/mnt/recovery/home/ubuntu/yolo_omr2/runs"
+    "/home/vulpeslari/omr/runs"
 )
 
-RUN_NAME = "ds2_yolov8s_clean"
+RUN_NAME = "ds2_yolov8s"
 
 # =========================================================
 # TRAIN
@@ -31,13 +31,13 @@ results = model.train(
     data=DATASET_YAML,
 
     # basic
-    epochs=12,
-    imgsz=640,
+    epochs=15,
+    imgsz=960,
     batch=8,
 
     # hardware
     device=0,
-    workers=3,
+    workers=6,
     cache=False,
 
     # optimizer
