@@ -24,12 +24,12 @@ DATASET_ROOT = Path(
 )
 
 OUTPUT_ROOT = Path(
-    "/home/vulpeslari/omr/exports/ds2_compact_curated"
+    "/home/vulpeslari/omr/exports/ds2_complete_curated"
 )
 
 SEED = 42
 
-TARGET_IMAGES = 200000
+TARGET_IMAGES = 250000
 TRAIN_RATIO = 0.90
 
 USE_SYMLINKS = True
@@ -339,7 +339,8 @@ def curate(records):
         reverse=True
     )
 
-    return records[:TARGET_IMAGES]
+    return records
+    # return records[:TARGET_IMAGES]
 
 # =========================================================
 # SPLIT

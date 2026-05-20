@@ -10,14 +10,14 @@ import pandas as pd
 MODEL = "yolov8s.pt"
 
 DATASET_YAML = (
-    "/home/vulpeslari/omr/exports/ds2_compact_curated/dataset.yaml"
+    "/home/vulpeslari/omr/exports/ds2_complete_curated/dataset.yaml"
 )
 
 PROJECT_DIR = (
     "/home/vulpeslari/omr/runs"
 )
 
-RUN_NAME = "ds2_yolov8s"
+RUN_NAME = "ds2_yolov8s_complete"
 
 # =========================================================
 # TRAIN
