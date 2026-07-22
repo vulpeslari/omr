@@ -17,7 +17,7 @@ PROJECT_DIR = (
     "/home/vulpeslari/omr/runs"
 )
 
-RUN_NAME = "ds2_yolov8s_complete"
+RUN_NAME = "ds2_yolov8s_img1600_complete"
 
 # =========================================================
 # TRAIN
@@ -31,13 +31,13 @@ results = model.train(
     data=DATASET_YAML,
 
     # basic
-    epochs=15,
-    imgsz=960,
-    batch=8,
+    epochs=6,
+    imgsz=1600,
+    batch=4,
 
     # hardware
     device=0,
-    workers=6,
+    workers=3,
     cache=False,
 
     # optimizer
