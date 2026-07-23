@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 import pandas as pd
 
-MODEL = "/home/vulpeslari/omr/runs/ds2_yolov8s_img1600_complete/weights/best.pt"
+MODEL = "/home/vulpeslari/omr/runs/ds2_yolov8s_img1600_compact/weights/best.pt"
 model = YOLO(MODEL)
 
 DATASET_YAML = (

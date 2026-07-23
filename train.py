@@ -10,14 +10,14 @@ import pandas as pd
 MODEL = "yolov8s.pt"
 
 DATASET_YAML = (
-    "/home/vulpeslari/omr/exports/ds2_complete_curated/dataset.yaml"
+    "/home/vulpeslari/omr/exports/ds2_compact_curated/dataset.yaml"
 )
 
 PROJECT_DIR = (
     "/home/vulpeslari/omr/runs"
 )
 
-RUN_NAME = "ds2_yolov8s_img1920_complete"
+RUN_NAME = "ds2_yolov8s_img1600_compact"
 
 # =========================================================
 # TRAIN
@@ -32,8 +32,8 @@ results = model.train(
 
     # basic
     epochs=6,
-    imgsz=1920,
-    batch=2,
+    imgsz=1600,
+    batch=4,
 
     # hardware
     device=0,
