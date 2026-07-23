@@ -5,15 +5,15 @@ data: /home/vulpeslari/omr/exports/ds2_compact_curated/dataset.yaml
 epochs: 6
 time: null
 patience: 20
-batch: 6
+batch: 4
 imgsz: 1600
 save: true
 save_period: -1
 cache: false
 device: '0'
-workers: 8
+workers: 10
 project: /home/vulpeslari/omr/runs
-name: ds2_yolov8m_img1600_compact
+name: ds2_yolov8m_img1600_compact-2
 exist_ok: false
 pretrained: true
 optimizer: AdamW
@@ -107,4 +107,4 @@ auto_augment: randaugment
 erasing: 0.4
 cfg: null
 tracker: botsort.yaml
-save_dir: /home/vulpeslari/omr/runs/ds2_yolov8m_img1600_compact
+save_dir: /home/vulpeslari/omr/runs/ds2_yolov8m_img1600_compact-2

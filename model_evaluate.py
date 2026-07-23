@@ -12,7 +12,7 @@ PROJECT_DIR = (
     "/home/vulpeslari/omr/runs"
 )
 
-RUN_NAME = "ds2_yolov8s_img1600_complete"
+RUN_NAME = "ds2_yolov8s_img1600_compact"
 
 metrics = model.val(
     data=DATASET_YAML,
