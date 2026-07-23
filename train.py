@@ -7,7 +7,7 @@ import pandas as pd
 # CONFIG
 # =========================================================
 
-MODEL = "yolov8s.pt"
+MODEL = "yolov8m.pt"
 
 DATASET_YAML = (
     "/home/vulpeslari/omr/exports/ds2_compact_curated/dataset.yaml"
@@ -17,7 +17,7 @@ PROJECT_DIR = (
     "/home/vulpeslari/omr/runs"
 )
 
-RUN_NAME = "ds2_yolov8s_img1600_compact"
+RUN_NAME = "ds2_yolov8m_img1600_compact"
 
 # =========================================================
 # TRAIN
